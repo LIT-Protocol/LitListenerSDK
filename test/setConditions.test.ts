@@ -21,75 +21,80 @@ const chronicleProvider = new ethers.providers.JsonRpcProvider(
 
 const arrayObject = [
   {
-      "number": 1,
-      "name": "Rest Of Tonight",
-      "detailedForecast": "Cloudy with a 50 percent chance of rain. Areas of fog. Lows in the lower 40s. East winds 10 to 15 mph."
+    number: 1,
+    name: "Rest Of Tonight",
+    detailedForecast:
+      "Cloudy with a 50 percent chance of rain. Areas of fog. Lows in the lower 40s. East winds 10 to 15 mph.",
   },
   {
-      "number": 2,
-      "name": "Tuesday",
-      "detailedForecast": "Mostly cloudy. Light rain showers early, then areas of drizzle in the afternoon. Areas of fog early, then patchy fog in the afternoon. Highs in the upper 40s. Southeast winds 5 to 15 mph."
+    number: 2,
+    name: "Tuesday",
+    detailedForecast:
+      "Mostly cloudy. Light rain showers early, then areas of drizzle in the afternoon. Areas of fog early, then patchy fog in the afternoon. Highs in the upper 40s. Southeast winds 5 to 15 mph.",
   },
   {
-      "number": 3,
-      "name": "Tuesday Night",
-      "detailedForecast": "Mostly cloudy. Patchy drizzle. Lows in the upper 30s. Southwest winds 5 to 10 mph shifting to the northwest after midnight."
+    number: 3,
+    name: "Tuesday Night",
+    detailedForecast:
+      "Mostly cloudy. Patchy drizzle. Lows in the upper 30s. Southwest winds 5 to 10 mph shifting to the northwest after midnight.",
   },
   {
-      "number": 4,
-      "name": "Wednesday",
-      "detailedForecast": "Partly sunny. Highs in the lower 40s. Northwest winds 5 to 10 mph."
+    number: 4,
+    name: "Wednesday",
+    detailedForecast:
+      "Partly sunny. Highs in the lower 40s. Northwest winds 5 to 10 mph.",
   },
   {
-      "number": 5,
-      "name": "Wednesday Night",
-      "detailedForecast": "Mostly cloudy. Lows in the lower 30s. North winds 5 to 15 mph. Gusts up to 25 mph after midnight."
+    number: 5,
+    name: "Wednesday Night",
+    detailedForecast:
+      "Mostly cloudy. Lows in the lower 30s. North winds 5 to 15 mph. Gusts up to 25 mph after midnight.",
   },
   {
-      "number": 6,
-      "name": "Thursday",
-      "detailedForecast": "Partly sunny. Highs in the upper 30s."
+    number: 6,
+    name: "Thursday",
+    detailedForecast: "Partly sunny. Highs in the upper 30s.",
   },
   {
-      "number": 7,
-      "name": "Thursday Night",
-      "detailedForecast": "Partly cloudy. Lows in the mid 20s."
+    number: 7,
+    name: "Thursday Night",
+    detailedForecast: "Partly cloudy. Lows in the mid 20s.",
   },
   {
-      "number": 8,
-      "name": "Friday",
-      "detailedForecast": "Partly sunny. Highs in the mid 30s."
+    number: 8,
+    name: "Friday",
+    detailedForecast: "Partly sunny. Highs in the mid 30s.",
   },
   {
-      "number": 9,
-      "name": "Friday Night",
-      "detailedForecast": "Partly cloudy. Lows in the lower 20s."
+    number: 9,
+    name: "Friday Night",
+    detailedForecast: "Partly cloudy. Lows in the lower 20s.",
   },
   {
-      "number": 10,
-      "name": "Saturday",
-      "detailedForecast": "Partly sunny. Highs in the lower 30s."
+    number: 10,
+    name: "Saturday",
+    detailedForecast: "Partly sunny. Highs in the lower 30s.",
   },
   {
-      "number": 11,
-      "name": "Saturday Night",
-      "detailedForecast": "Mostly cloudy. Lows in the lower 20s."
+    number: 11,
+    name: "Saturday Night",
+    detailedForecast: "Mostly cloudy. Lows in the lower 20s.",
   },
   {
-      "number": 12,
-      "name": "Sunday",
-      "detailedForecast": "Mostly cloudy. Highs in the lower 30s."
+    number: 12,
+    name: "Sunday",
+    detailedForecast: "Mostly cloudy. Highs in the lower 30s.",
   },
   {
-      "number": 13,
-      "name": "Sunday Night",
-      "detailedForecast": "Mostly cloudy. Lows in the lower 20s."
+    number: 13,
+    name: "Sunday Night",
+    detailedForecast: "Mostly cloudy. Lows in the lower 20s.",
   },
   {
-      "number": 14,
-      "name": "New Years Day",
-      "detailedForecast": "Mostly cloudy. Highs in the lower 30s."
-  }
+    number: 14,
+    name: "New Years Day",
+    detailedForecast: "Mostly cloudy. Highs in the lower 30s.",
+  },
 ];
 
 const customActions: CustomAction[] = [
@@ -105,7 +110,7 @@ const customActions: CustomAction[] = [
   },
 ];
 
-describe("Set the Conditions of the Circuit", () => {
+describe("SetTheConditionsOfTheCircuit", () => {
   let newCircuit: Circuit,
     deployedListenerToken: Contract,
     owner: any,
@@ -124,7 +129,7 @@ describe("Set the Conditions of the Circuit", () => {
     });
   });
 
-  describe("Set the Conditions", () => {
+  describe("SetTheConditions", () => {
     before(async () => {
       const provider = new ethers.providers.JsonRpcProvider(
         "http://127.0.0.1:8545",
@@ -387,7 +392,7 @@ describe("Set the Conditions of the Circuit", () => {
     });
   });
 
-  describe("Check for Different Expected Value Types on Webhook", () => {
+  describe("CheckForDifferentExpectedValueTypesOnWebhook", () => {
     let authSig: AuthSig,
       pkpTokenData: {
         tokenId: string;
@@ -401,7 +406,6 @@ describe("Set the Conditions of the Circuit", () => {
 
       const ipfsCID = await newCircuit.getIPFSHash(LitActionCode.litActionCode);
       pkpTokenData = await newCircuit.mintGrantBurnPKP(ipfsCID);
-      authSig = await newCircuit.generateAuthSignature(80001);
     });
 
     it("Compares for String", async () => {
@@ -424,7 +428,6 @@ describe("Set the Conditions of the Circuit", () => {
       ]);
       await newCircuit.start({
         publicKey: pkpTokenData.publicKey,
-        authSig,
       });
 
       const responseLog = newCircuit.getLogs(LogCategory.CONDITION);
@@ -458,13 +461,12 @@ describe("Set the Conditions of the Circuit", () => {
 
       await newCircuit.start({
         publicKey: pkpTokenData.publicKey,
-        authSig,
       });
 
       const responseLog = newCircuit.getLogs(LogCategory.CONDITION);
       expect(responseLog[responseLog.length - 2].category).to.equal(2);
       expect(responseLog[responseLog.length - 2].message).to.equal(
-        `Condition Matched with Emitted Value: `,
+        "Condition Matched with Emitted Value: ",
       );
       expect(responseLog[responseLog.length - 2].responseObject).to.equal(
         JSON.stringify(1),
@@ -476,8 +478,8 @@ describe("Set the Conditions of the Circuit", () => {
         new WebhookCondition(
           "https://api.weather.gov",
           "/zones/forecast/MIZ018/forecast",
-          "properties.periods[0]",
-          arrayObject[0],
+          "properties.periods[0].number",
+          1,
           "===",
           undefined,
           async (emittedValue) => {
@@ -492,16 +494,15 @@ describe("Set the Conditions of the Circuit", () => {
 
       await newCircuit.start({
         publicKey: pkpTokenData.publicKey,
-        authSig,
       });
 
       const responseLog = newCircuit.getLogs(LogCategory.CONDITION);
       expect(responseLog[responseLog.length - 2].category).to.equal(2);
       expect(responseLog[responseLog.length - 2].message).to.equal(
-        `Condition Matched with Emitted Value: `,
+        "Condition Matched with Emitted Value: ",
       );
       expect(responseLog[responseLog.length - 2].responseObject).to.equal(
-        JSON.stringify(arrayObject[0]),
+        JSON.stringify(1),
       );
     });
 
@@ -526,7 +527,6 @@ describe("Set the Conditions of the Circuit", () => {
 
       await newCircuit.start({
         publicKey: pkpTokenData.publicKey,
-        authSig,
       });
 
       const responseLog = newCircuit.getLogs(LogCategory.CONDITION);
@@ -540,13 +540,12 @@ describe("Set the Conditions of the Circuit", () => {
     });
   });
 
-  describe("Check for Different Expected Value Types on Contract", () => {
-    let authSig: AuthSig,
-      pkpTokenData: {
-        tokenId: string;
-        publicKey: string;
-        address: string;
-      };
+  describe("CheckForDifferentExpectedValueTypesOnContract", () => {
+    let pkpTokenData: {
+      tokenId: string;
+      publicKey: string;
+      address: string;
+    };
 
     beforeEach(async () => {
       const LitActionCode = await newCircuit.setActions(customActions);
@@ -558,7 +557,6 @@ describe("Set the Conditions of the Circuit", () => {
 
       const ipfsCID = await newCircuit.getIPFSHash(LitActionCode.litActionCode);
       pkpTokenData = await newCircuit.mintGrantBurnPKP(ipfsCID);
-      authSig = await newCircuit.generateAuthSignature(80001);
     });
 
     it("Checks Against Transfer Event", async () => {
@@ -583,7 +581,6 @@ describe("Set the Conditions of the Circuit", () => {
       ]);
       const startPromise = newCircuit.start({
         publicKey: pkpTokenData.publicKey,
-        authSig,
       });
 
       setTimeout(async () => {
@@ -628,7 +625,6 @@ describe("Set the Conditions of the Circuit", () => {
       });
       const ipfsCID = await newCircuit.getIPFSHash(LitActionCode.litActionCode);
       pkpTokenData = await newCircuit.mintGrantBurnPKP(ipfsCID);
-      authSig = await newCircuit.generateAuthSignature(80001);
 
       const responseLog = newCircuit.getLogs(LogCategory.CONDITION);
       expect(responseLog?.length).to.equal(0);

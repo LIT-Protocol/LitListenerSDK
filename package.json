@@ -1,6 +1,6 @@
 {
-  "name": "lit-listener-sdk",
-  "version": "1.0.25",
+  "name": "@lit-protocol/lit-listener-sdk",
+  "version": "1.1.0",
   "description": "An open source typescript SDK, compatible with node and browser, with an easy interface to automate responses from webhooks, subscribed on-chain events and intervals through triggered callback functions and the use of Lit Protocol PKPs.",
   "main": "dist/src/index.js",
   "module": "dist/index.m.js",
@@ -19,22 +19,24 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DIGITALAX/LitListenerSDK.git"
+    "url": "https://github.com/LIT-Protocol/LitListenerSDK"
   },
   "author": "Emma-Jane MacKinnon-Lee",
   "license": "UNLICENSE",
   "bugs": {
-    "url": "https://github.com/DIGITALAX/LitListenerSDK/issues"
+    "url": "https://github.com/LIT-Protocol/LitListenerSDK"
   },
   "directories": {
     "test": "test"
   },
-  "homepage": "https://github.com/DIGITALAX/LitListenerSDK#readme",
+  "homepage": "https://github.com/LIT-Protocol/LitListenerSDK",
   "dependencies": {
     "@ethersproject/bytes": "^5.7.0",
-    "@ethersproject/transactions": "^5.7.0",
-    "@lit-protocol/lit-node-client": "2.2.24",
-    "@lit-protocol/pkp-ethers": "2.2.41",
+    "@ethersproject/transactions": "5.7.0",
+    "@lit-protocol/lit-node-client": "6.0.0-beta.2",
+    "@lit-protocol/pkp-ethers": "6.0.0-beta.2",
+    "@lit-protocol/auth-helpers": "6.0.0-beta.2",
+    "@lit-protocol/types": "6.0.0-beta.2",
     "@typechain/ethers-v5": "^10.1.1",
     "@typechain/hardhat": "^6.1.4",
     "axios": "^1.4.0",
@@ -65,7 +67,7 @@
   "devDependencies": {
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
-    "@lit-protocol/types": "2.2.54",
+    "@lit-protocol/types": "6.0.0-beta.2",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.4",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
     "@nomicfoundation/hardhat-toolbox": "^2.0.0",
