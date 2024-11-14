@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import { Contract } from "ethers";
@@ -15,26 +16,35 @@ import ListenerERC20ABI from "./../src/abis/ListenerERC20.json";
 import { CHRONICLE_PROVIDER } from "./../src/constants";
 
 describe("ThrowsAllErrorsOfTheCircuit", () => {
-  const chronicleProvider = new ethers.providers.JsonRpcProvider(
-    CHRONICLE_PROVIDER,
-    175177,
+  const provider = new ethers.providers.JsonRpcProvider(
+    "https://yellowstone-rpc.litprotocol.com/",
   );
+  const chronicleSigner = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+  const pkpContractAddress = "0x02C4242F72d62c8fEF2b2DB088A35a9F4ec741C7";
+  const pkpHelperContractAddress = "0x087995cc8BE0Bd6C19b1c7A01F9DB6D2CfFe0c5C";
+
   const customActions: CustomAction[] = [
     {
       type: "custom",
       priority: 0,
-      code: ' async () => { Lit.Actions.setResponse({ response: "Custom Action 1" }); }',
+      code: " async () => { Lit.Actions.setResponse({ response: \"Custom Action 1\" }); }",
     },
     {
       type: "custom",
       priority: 1,
-      code: 'async () => { Lit.Actions.setResponse({ response: "Custom Action 2" }); }',
+      code: "async () => { Lit.Actions.setResponse({ response: \"Custom Action 2\" }); }",
     },
   ];
 
   describe("Starts Monitoring Webhook", () => {
     it("Throw Error While Retrieving Webhook Information", async () => {
-      const newCircuit = new Circuit(undefined, undefined, undefined, true);
+      const newCircuit = new Circuit(
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
+      );;
       newCircuit.setConditionalLogic({
         type: "EVERY",
         interval: 10000,
@@ -76,7 +86,13 @@ describe("ThrowsAllErrorsOfTheCircuit", () => {
     });
 
     it("Throw Error on Invalid Response Path", async () => {
-      const newCircuit = new Circuit(undefined, undefined, undefined, true);
+      const newCircuit = new Circuit(
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
+      );
       newCircuit.setConditionalLogic({
         type: "EVERY",
         interval: 10000,
@@ -135,10 +151,11 @@ describe("ThrowsAllErrorsOfTheCircuit", () => {
 
     it("Throw Error While Processing Contract Event", async () => {
       const newCircuit = new Circuit(
-        new ethers.Wallet(process.env.PRIVATE_KEY, chronicleProvider),
-        undefined,
-        undefined,
-        true,
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
       );
       newCircuit.setConditionalLogic({
         type: "EVERY",
@@ -179,7 +196,13 @@ describe("ThrowsAllErrorsOfTheCircuit", () => {
     });
 
     it("Throw Error for Invalid Provider URL", async () => {
-      const newCircuit = new Circuit(undefined, undefined, undefined, true);
+      const newCircuit = new Circuit(
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
+      );
       await newCircuit.setActions(customActions);
       newCircuit.setConditionalLogic({
         type: "EVERY",
@@ -218,7 +241,13 @@ describe("ThrowsAllErrorsOfTheCircuit", () => {
 
   describe("Throw Error Adding Actions", () => {
     it("Throw Error on Non Unique Action Priority", async () => {
-      const noSignCircuit = new Circuit(undefined, undefined, undefined, true);
+      const noSignCircuit = new Circuit(
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
+      );
       noSignCircuit.setConditionalLogic({
         type: "EVERY",
         interval: 10000,
@@ -270,7 +299,13 @@ describe("ThrowsAllErrorsOfTheCircuit", () => {
 
   describe("Throw Error for Invalid Chain on Auth Sig", () => {
     it("Throw error for Invalid Chain", async () => {
-      const newCircuit = new Circuit(undefined, undefined, undefined, true);
+      const newCircuit = new Circuit(
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
+      );
       newCircuit.setConditionalLogic({
         type: "EVERY",
         interval: 10000,
@@ -309,7 +344,13 @@ describe("ThrowsAllErrorsOfTheCircuit", () => {
     );
 
     it("Throw Error for No Conditions Set", async () => {
-      const newCircuit = new Circuit(undefined, undefined, undefined, true);
+      const newCircuit = new Circuit(
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
+      );
       newCircuit.setConditionalLogic({
         type: "EVERY",
         interval: 10000,
@@ -327,11 +368,17 @@ describe("ThrowsAllErrorsOfTheCircuit", () => {
       }
       expect(() => {
         throw error;
-      }).to.throw(`Conditions have not been set. Run setConditions() first.`);
+      }).to.throw("Conditions have not been set. Run setConditions() first.");
     });
 
     it("Throw Error for No Actions Set", async () => {
-      const newCircuit = new Circuit(undefined, undefined, undefined, true);
+      const newCircuit = new Circuit(
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
+      );
       newCircuit.setConditionalLogic({
         type: "EVERY",
         interval: 10000,
@@ -365,16 +412,17 @@ describe("ThrowsAllErrorsOfTheCircuit", () => {
       }
       expect(() => {
         throw error;
-      }).to.throw(`Actions have not been set. Run setActions() first.`);
+      }).to.throw("Actions have not been set. Run setActions() first.");
     });
 
     let newCircuit: Circuit;
     before(() => {
       newCircuit = new Circuit(
-        new ethers.Wallet(process.env.PRIVATE_KEY, chronicleProvider),
-        undefined,
-        undefined,
-        true,
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
       );
       newCircuit.setConditionalLogic({
         type: "EVERY",
@@ -409,7 +457,7 @@ describe("ThrowsAllErrorsOfTheCircuit", () => {
       }
       expect(() => {
         throw error;
-      }).to.throw(`Invalid PKP Public Key.`);
+      }).to.throw("Invalid PKP Public Key.");
     });
 
     it("Throw Error for Invalid JS Params to Lit Action", async () => {
@@ -471,7 +519,7 @@ describe("ThrowsAllErrorsOfTheCircuit", () => {
       expect(() => {
         throw error;
       }).to.throw(
-        `Error running circuit: invalid public or private key (argument="key", value="[REDACTED]", code=INVALID_ARGUMENT, version=signing-key/5.7.0)`,
+        "Error running circuit: invalid public or private key (argument=\"key\", value=\"[REDACTED]\", code=INVALID_ARGUMENT, version=signing-key/5.7.0)",
       );
     });
   });
