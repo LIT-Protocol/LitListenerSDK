@@ -1,108 +1,100 @@
-import { ethers } from "ethers";
-import bs58 from "bs58";
-import {
-  SessionSigsMap,
-  AuthSig,
-  AuthCallbackParams,
-} from "@lit-protocol/types";
-import { DENO_BUNDLED } from "./../../src/constants";
-import { LitNodeClient } from "@lit-protocol/lit-node-client";
-import {
-  LitAbility,
-  LitActionResource,
-  LitPKPResource,
-  LitResourceAbilityRequest,
-  createSiweMessageWithRecaps,
-} from "@lit-protocol/auth-helpers";
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable no-var */
 
-let crypto: any, CryptoJS: any;
+export {};
 
-const loadNodebuild = async () => {
-  if (typeof window === "undefined") {
-    const stream = await import("stream");
-    crypto = await import("crypto");
-    CryptoJS = await import("crypto-js");
+declare global {
+    const __createBinding: (o: any, m: any, k: string, k2?: string) => void;
+    const __setModuleDefault: (o: any, v: any) => void;
+    const __importStar: <T>(mod: T) => T;
+    // const __importDefault: <T>(mod: T) => T | { default: T };
+}
+
+"use strict";
+const __createBinding = function(o: any, m: any, k: string, k2?: string): void {
+  if (k2 === undefined) k2 = k;
+  let desc = Object.getOwnPropertyDescriptor(m, k);
+  if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+    desc = { enumerable: true, get: function() { return m[k]; } };
   }
+  Object.defineProperty(o, k2, desc);
 };
 
-loadNodebuild();
+const __setModuleDefault = function(o: any, v: any): void {
+  Object.defineProperty(o, "default", { enumerable: true, value: v });
+};
 
-export const generateSessionSig = async (
-  client: LitNodeClient,
-  signer: ethers.Signer,
-  pkpPublicKey: string,
-  resources: LitResourceAbilityRequest[] = [],
-  chainId = 1,
-  uri = "https://localhost/login",
-  version = "1",
-): Promise<SessionSigsMap> => {
+const __importStar = function(mod: any) {
+  if (mod && mod.__esModule) return mod;
+  const result = {};
+  if (mod != null) for (const k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+  __setModuleDefault(result, mod);
+  return result;
+};
+
+const __importDefault = function(mod: any) {
+  return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.bundleCodeManual = exports.hashHex = exports.generateSecureRandomKey = exports.getBytesFromMultihash = exports.generateSessionSig = void 0;
+const ethers_1 = require("ethers");
+const bs58_1 = __importDefault(require("bs58"));
+const constants_1 = require("./../../src/constants");
+const auth_helpers_1 = require("@lit-protocol/auth-helpers");
+let cryptoLib: typeof import("crypto");
+let CryptoJSInstance: typeof import("crypto-js");
+const loadNodebuild = async () => {
+  if (typeof window === "undefined") {
+    const stream = await Promise.resolve().then(() => __importStar(require("stream")));
+    cryptoLib = await Promise.resolve().then(() => __importStar(require("crypto")));
+    CryptoJSInstance = await Promise.resolve().then(() => __importStar(require("crypto-js")));
+  }
+};
+loadNodebuild();
+export const generateSessionSig = async (client, signer, pkpPublicKey, resources = [], chainId = 1, uri = "https://localhost/login", version = "1") => {
   try {
     resources =
-      resources.length > 0
-        ? resources
-        : [
-            {
-              resource: new LitPKPResource("*"),
-              ability: LitAbility.PKPSigning,
-            },
-            {
-              resource: new LitActionResource("*"),
-              ability: LitAbility.LitActionExecution,
-            },
-          ];
-
+            resources.length > 0
+              ? resources
+              : [
+                {
+                  resource: new auth_helpers_1.LitPKPResource("*"),
+                  ability: auth_helpers_1.LitAbility.PKPSigning,
+                },
+                {
+                  resource: new auth_helpers_1.LitActionResource("*"),
+                  ability: auth_helpers_1.LitAbility.LitActionExecution,
+                },
+              ];
     const sessionSigs = await client.getSessionSigs({
       chain: "ethereum",
-      pkpPublicKey: pkpPublicKey,
       resourceAbilityRequests: resources,
-      authNeededCallback: async (params: AuthCallbackParams) => {
+      authNeededCallback: async (params) => {
         console.log("resourceAbilityRequests:", params.resources);
-
         if (!params.expiration) {
           throw new Error("expiration is required");
         }
-
         if (!params.resources) {
           throw new Error("resourceAbilityRequests is required");
         }
-
         if (!params.uri) {
           throw new Error("uri is required");
         }
         const blockHash = await client.getLatestBlockhash();
-        const authSig = await generateAuthSig(
-          client,
-          signer,
-          blockHash,
-
-          params.resourceAbilityRequests,
-          1,
-          params.uri,
-        );
-
+        const authSig = await generateAuthSig(client, signer, blockHash, params.resourceAbilityRequests, 1, params.uri);
         return authSig;
       },
     });
-
     return sessionSigs;
-  } catch (err) {
+  }
+  catch (err) {
     throw new Error(`Error generating signed message ${err}`);
   }
 };
-
-const generateAuthSig = async (
-  client: LitNodeClient,
-  signer: ethers.Signer,
-  blockHash: string,
-  resources: LitResourceAbilityRequest[],
-  chainId = 1,
-  uri = "https://localhost/login",
-  version = "1",
-): Promise<AuthSig> => {
+const generateAuthSig = async (client, signer, blockHash, resources, chainId = 1, uri = "https://localhost/login", version = "1") => {
   let address = await signer.getAddress();
-  address = ethers.utils.getAddress(address);
-
-  const message = await createSiweMessageWithRecaps({
+  address = ethers_1.ethers.utils.getAddress(address);
+  const message = await (0, auth_helpers_1.createSiweMessageWithRecaps)({
     walletAddress: address,
     nonce: blockHash,
     litNodeClient: client,
@@ -110,7 +102,6 @@ const generateAuthSig = async (
     resources,
     uri,
   });
-
   const sig = await signer.signMessage(message);
   return {
     sig,
@@ -119,27 +110,30 @@ const generateAuthSig = async (
     address: address,
   };
 };
-
-export const getBytesFromMultihash = (multihash: string): string => {
-  const decoded = bs58.decode(multihash);
+export const getBytesFromMultihash = (multihash) => {
+  const decoded = bs58_1.default.decode(multihash);
   return `0x${Buffer.from(decoded).toString("hex")}`;
 };
-
-export const generateSecureRandomKey = (): string => {
-  if (!crypto) {
+export const generateSecureRandomKey = () => {
+  if (!cryptoLib) {
     throw new Error("This function can only be run in a Node.js environment.");
   }
-  return crypto.randomBytes(32).toString("hex");
+  return cryptoLib.randomBytes(32).toString("hex");
 };
-
-export const hashHex = (input: string): string => {
-  if (!CryptoJS) {
+export const hashHex = async (input) => {
+  await loadNodebuild();
+  if (!CryptoJSInstance) {
     throw new Error("This function can only be run in a Node.js environment.");
   }
-  const hash = CryptoJS.SHA256(input);
-  return "0x" + hash.toString(CryptoJS.enc.Hex);
+  const hash = CryptoJSInstance.SHA256(input);
+  return "0x" + hash.toString(CryptoJSInstance.enc.Hex);
 };
+export const bundleCodeManual = (dynamicCode) => {
+  return constants_1.DENO_BUNDLED + "\n\n" + dynamicCode;
+};
+exports.bundleCodeManual = bundleCodeManual;
 
-export const bundleCodeManual = (dynamicCode: string): string => {
-  return DENO_BUNDLED + "\n\n" + dynamicCode;
-};
+// exports.generateSessionSig = generateSessionSig;
+// exports.getBytesFromMultihash = getBytesFromMultihash;
+// exports.generateSecureRandomKey = generateSecureRandomKey;
+// exports.hashHex = hashHex;

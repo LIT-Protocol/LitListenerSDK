@@ -15,9 +15,9 @@
     "types": ["node", "chai", "chai-as-promised"],
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node",
   },
-  "include": ["src/**/*", "test"],
+  "include": ["src/**/*", "test", "js-test.mjs"],
   "exclude": ["node_modules", "lib", "**/*spec.ts"],
   "files": ["./hardhat.config.ts", "src/index.ts"]
 }

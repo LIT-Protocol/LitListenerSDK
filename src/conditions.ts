@@ -1,255 +1,152 @@
-import axios from "axios";
-import { ethers } from "ethers";
-import { EventEmitter } from "events";
-import {
-  Condition,
-  ContractCondition,
-  LitChainIds,
-  WebhookCondition,
-} from "./@types/lit-listener-sdk";
+/* eslint-disable @typescript-eslint/no-var-requires */
+export {}; 
 
-/**
- * @class ConditionMonitor
- * @description Class that monitors and handles conditions.
- */
-export class ConditionMonitor extends EventEmitter {
+"use strict";
+const __importDefault = function (mod) {
+  return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ConditionMonitor = void 0;
+const axios_1 = __importDefault(require("axios"));
+const ethers_1 = require("ethers");
+const events_1 = require("events");
+const lit_listener_sdk_1 = require("./@types/lit-listener-sdk");
+export class ConditionMonitor extends events_1.EventEmitter {
   constructor() {
     super();
-  }
-
-  /**
-   * @method createCondition
-   * @description Accepts a condition and starts monitoring it.
-   * @param condition - The condition to monitor.
-   */
-  createCondition = async (
-    condition: WebhookCondition | ContractCondition,
-    errorHandlingModeStrict: boolean,
-  ) => {
-    if (condition instanceof WebhookCondition) {
-      await this.retry(
-        () => this.startMonitoringWebHook(condition),
-        3,
-        errorHandlingModeStrict,
-        condition,
-      );
-    } else if (condition instanceof ContractCondition) {
-      await this.retry(
-        () => this.startMonitoringContract(condition),
-        3,
-        errorHandlingModeStrict,
-        condition,
-      );
-    }
-  };
-
-  /**
-   * @method startMonitoringWebHook
-   * @description Starts monitoring a webhook condition.
-   * @private
-   * @param condition - The webhook condition to monitor.
-   * @throws {Error} If an error occurs while retrieving webhook information.
-   */
-  private startMonitoringWebHook = async (condition: WebhookCondition) => {
-    // Monitor function, encapsulates the logic of querying the webhook and checking the response against the expected value.
-    const webhookListener = async () => {
-      try {
-        const headers = condition.apiKey
-          ? { Authorization: `Bearer ${condition.apiKey}` }
-          : undefined;
-        const response = await axios.get(
-          `${condition.baseUrl}${condition.endpoint}`,
-          { headers },
-        );
-        let value = response.data;
-        let pathParts = condition.responsePath.split(".");
-        pathParts = pathParts.flatMap((part) =>
-          part.split(/\[(.*?)\]/).filter(Boolean),
-        );
-
-        for (const part of pathParts) {
-          if (!isNaN(parseInt(part))) {
-            value = value[parseInt(part)];
-          } else {
-            value = value[part];
-          }
-          if (value === undefined) {
-            throw new Error(`Invalid response path: ${condition.responsePath}`);
-          }
-        }
-
-        await this.checkAgainstExpected(condition, value);
-      } catch (error) {
-        condition.onError(error);
-        this.emit("conditionError", error, condition);
-        throw new Error(`Error in Webhook Action: ${error.message}`);
+    this.createCondition = async (condition, errorHandlingModeStrict) => {
+      if (condition instanceof lit_listener_sdk_1.WebhookCondition) {
+        await this.retry(() => this.startMonitoringWebHook(condition), 3, errorHandlingModeStrict, condition);
+      }
+      else if (condition instanceof lit_listener_sdk_1.ContractCondition) {
+        await this.retry(() => this.startMonitoringContract(condition), 3, errorHandlingModeStrict, condition);
       }
     };
-
-    return webhookListener();
-  };
-
-  /**
-   * @method startMonitoringContract
-   * @description Starts monitoring a contract condition.
-   * @private
-   * @param condition - The contract condition to monitor.
-   * @throws {Error} If an error occurs while processing contract event.
-   */
-  private startMonitoringContract = async (condition: ContractCondition) => {
-    try {
-      const { contractAddress, abi, eventName, providerURL } = condition;
-
-      const checkProviderValid = await this.checkProvider(providerURL);
-
-      if (!providerURL || !checkProviderValid) {
-        this.emit("conditionError", "Error: Invalid Provider URL.", condition);
-        throw new Error(`Error: Invalid Provider URL.`);
-      }
-
-      const contract = new ethers.Contract(
-        contractAddress,
-        abi,
-        new ethers.providers.JsonRpcProvider(
-          providerURL,
-          LitChainIds[condition.chainId],
-        ),
-      );
-
-      const processEvent = async (...args) => {
-        const eventData = args.pop();
-
-        if (!eventData.args) {
-          this.emit(
-            "conditionError",
-            "Error in Retrieving contract args.",
-            condition,
-          );
-          throw new Error(`Error in Retrieving contract args.`);
-        }
-
+    this.startMonitoringWebHook = async (condition) => {
+      const webhookListener = async () => {
         try {
-          const emittedValues = condition.eventArgName.map((argName) => {
-            const value = eventData.args[argName];
-            if (value === undefined) {
-              throw new Error(
-                `Argument '${argName}' not found in event arguments.`,
-              );
+          const headers = condition.apiKey
+            ? { Authorization: `Bearer ${condition.apiKey}` }
+            : undefined;
+          const response = await axios_1.default.get(`${condition.baseUrl}${condition.endpoint}`, { headers });
+          let value = response.data;
+          let pathParts = condition.responsePath.split(".");
+          pathParts = pathParts.flatMap((part) => part.split(/\[(.*?)\]/).filter(Boolean));
+          for (const part of pathParts) {
+            if (!isNaN(parseInt(part))) {
+              value = value[parseInt(part)];
             }
-            return value;
-          });
-          await this.checkAgainstExpected(condition, emittedValues);
-        } catch (error) {
+            else {
+              value = value[part];
+            }
+            if (value === undefined) {
+              throw new Error(`Invalid response path: ${condition.responsePath}`);
+            }
+          }
+          await this.checkAgainstExpected(condition, value);
+        }
+        catch (error) {
           condition.onError(error);
           this.emit("conditionError", error, condition);
+          throw new Error(`Error in Webhook Action: ${error.message}`);
         }
       };
-
-      const subscribeToEvent = () => {
-        contract.on(eventName, processEvent);
-      };
-
-      return subscribeToEvent();
-    } catch (error: any) {
-      condition.onError(error);
-      this.emit("conditionError", error, condition);
-      throw new Error(`Error in Contract Action: ${error.message}`);
-    }
-  };
-
-  /**
-   * @method checkAgainstExpected
-   * @description Checks the emitted value against the expected value and triggers the appropriate callbacks.
-   * @private
-   * @param condition - The condition being checked.
-   * @param emittedValue - The value emitted by the webhook or contract event.
-   * @throws {Error} If an error occurs while running match or unmatch.
-   */
-  private checkAgainstExpected = async (
-    condition: WebhookCondition | ContractCondition,
-    emittedValue: any,
-  ) => {
-    let match = false;
-
-    if (
-      typeof condition.expectedValue === "number" ||
-      typeof condition.expectedValue === "string" ||
-      typeof condition.expectedValue === "bigint"
-    ) {
-      match = this.compareValues(
-        condition.expectedValue,
-        emittedValue,
-        condition.matchOperator,
-      );
-    } else if (
-      Array.isArray(condition.expectedValue) &&
-      Array.isArray(emittedValue)
-    ) {
-      if (condition.expectedValue.length !== emittedValue.length) {
-        match = false;
-      } else {
-        match = condition.expectedValue.every((expected, index) => {
-          const emitted = emittedValue[index];
-          return this.compareValues(expected, emitted, condition.matchOperator);
-        });
+      return webhookListener();
+    };
+    this.startMonitoringContract = async (condition) => {
+      try {
+        const { contractAddress, abi, eventName, providerURL } = condition.contractAddress;
+        const checkProviderValid = await this.checkProvider(providerURL);
+        if (!providerURL || !checkProviderValid) {
+          this.emit("conditionError", "Error: Invalid Provider URL.", condition);
+          throw new Error("Error: Invalid Provider URL.");
+        }
+        const contract = new ethers_1.ethers.Contract(contractAddress, abi, new ethers_1.ethers.providers.JsonRpcProvider(providerURL, lit_listener_sdk_1.LitChainIds[condition.chainId]));
+        const processEvent = async (...args) => {
+          const eventData = args.pop();
+          if (!eventData.args) {
+            this.emit("conditionError", "Error in Retrieving contract args.", condition);
+            throw new Error("Error in Retrieving contract args.");
+          }
+          try {
+            const emittedValues = condition.contractAddress.eventArgName.map((argName) => {
+              const value = eventData.args[argName];
+              if (value === undefined) {
+                throw new Error(`Argument '${argName}' not found in event arguments.`);
+              }
+              return value;
+            });
+            await this.checkAgainstExpected(condition.contractAddress, emittedValues);
+          }
+          catch (error) {
+            condition.onError(error);
+            this.emit("conditionError", error, condition);
+          }
+        };
+        const subscribeToEvent = () => {
+          contract.on(eventName, processEvent);
+          console.log("Subscribed!");
+        };
+        return subscribeToEvent();
       }
-    } else if (
-      typeof condition.expectedValue === "object" &&
-      typeof emittedValue === "object"
-    ) {
-      const expectedKeys = Object.keys(condition.expectedValue);
-      const emittedKeys = Object.keys(emittedValue);
-
-      if (expectedKeys.length !== emittedKeys.length) {
-        match = false;
-      } else {
-        match = expectedKeys.every((key) => {
-          return this.compareValues(
-            condition.expectedValue[key],
-            emittedValue[key],
-            condition.matchOperator,
-          );
-        });
+      catch (error) {
+        condition.onError(error);
+        this.emit("conditionError", error, condition);
+        throw new Error(`Error in Contract Action: ${error.message}`);
       }
-    }
-
-    try {
-      if (match) {
-        await condition.onMatched(emittedValue);
-        await condition.sdkOnMatched();
-        this.emit("conditionMatched", emittedValue);
-      } else {
-        await condition.onUnMatched(emittedValue);
-        await condition.sdkOnUnMatched();
-        this.emit("conditionNotMatched", emittedValue);
+    };
+    this.checkAgainstExpected = async (condition, emittedValue) => {
+      let match = false;
+            
+      const expectedValue = condition.expectedValue;
+      const matchOperator = condition.matchOperator;
+            
+      if (typeof expectedValue === "number" ||
+                typeof expectedValue === "string" ||
+                typeof expectedValue === "bigint") {
+        match = this.compareValues(expectedValue, emittedValue, matchOperator);
       }
-    } catch (error: any) {
-      throw new Error(
-        `Error in Checking Against Expected Values: ${error.message}`,
-      );
-    }
-  };
-
-  /**
-   * Compares the emittedValue with the expectedValue based on the operator provided.
-   * The operator could be one of the following: "<", ">", "==", "===", "!==", "!=", ">=", "<=".
-   * An error is thrown for any unsupported operator.
-   *
-   * @param {any} expectedValue - The expected value.
-   * @param {any} emittedValue - The value that is being compared against the expected value.
-   * @param {string} operator - The operator used for the comparison. It must be one of the following: "<", ">", "==", "===", "!==", "!=", ">=", "<=".
-   * @return {boolean} - True if the condition holds based on the operator, otherwise false.
-   * @throws {Error} - If the operator is unsupported.
-   */ private compareValues = (
-    expectedValue: any,
-    emittedValue: any,
-    operator: string,
-  ) => {
-    if (
-      ethers.BigNumber.isBigNumber(expectedValue) &&
-      ethers.BigNumber.isBigNumber(emittedValue)
-    ) {
-      switch (operator) {
+      else if (Array.isArray(expectedValue) && Array.isArray(emittedValue)) {
+        if (expectedValue.length !== emittedValue.length) {
+          match = false;
+        } else {
+          match = expectedValue.every((expected, index) => {
+            const emitted = emittedValue[index];
+            return this.compareValues(expected, emitted, matchOperator);
+          });
+        }
+      }
+      else if (typeof expectedValue === "object" && typeof emittedValue === "object") {
+        const expectedKeys = Object.keys(expectedValue);
+        const emittedKeys = Object.keys(emittedValue);
+                
+        if (expectedKeys.length !== emittedKeys.length) {
+          match = false;
+        } else {
+          match = expectedKeys.every((key) => {
+            return this.compareValues(expectedValue[key], emittedValue[key], matchOperator);
+          });
+        }
+      }
+        
+      try {
+        if (match) {
+          await condition.onMatched(emittedValue);
+          console.log("Emitted Values: ", emittedValue);
+          this.emit("conditionMatched", emittedValue);
+        } else {
+          await condition.onUnMatched(emittedValue);
+          console.log("Emitted Values: ", emittedValue);
+          this.emit("conditionNotMatched", emittedValue);
+        }
+      } catch (error) {
+        throw new Error(`Error in Checking Against Expected Values: ${error.message}`);
+      }
+    };
+    this.compareValues = (expectedValue, emittedValue, operator) => {
+      if (ethers_1.ethers.BigNumber.isBigNumber(expectedValue) &&
+                ethers_1.ethers.BigNumber.isBigNumber(emittedValue)) {
+        switch (operator) {
         case "<":
           return emittedValue.lt(expectedValue);
         case ">":
@@ -264,12 +161,11 @@ export class ConditionMonitor extends EventEmitter {
           return emittedValue.gte(expectedValue);
         case "<=":
           return emittedValue.lte(expectedValue);
+        }
       }
-    } else if (
-      typeof expectedValue === "object" &&
-      typeof emittedValue === "object"
-    ) {
-      switch (operator) {
+      else if (typeof expectedValue === "object" &&
+                typeof emittedValue === "object") {
+        switch (operator) {
         case "==":
         case "===":
           return this.deepEqualObjects(emittedValue, expectedValue);
@@ -277,12 +173,11 @@ export class ConditionMonitor extends EventEmitter {
         case "!==":
           return !this.deepEqualObjects(emittedValue, expectedValue);
         default:
-          throw new Error(
-            `Operator '${operator}' not supported for object comparison.`,
-          );
+          throw new Error(`Operator '${operator}' not supported for object comparison.`);
+        }
       }
-    } else {
-      switch (operator) {
+      else {
+        switch (operator) {
         case "<":
           return emittedValue < expectedValue;
         case ">":
@@ -299,79 +194,41 @@ export class ConditionMonitor extends EventEmitter {
           return emittedValue >= expectedValue;
         case "<=":
           return emittedValue <= expectedValue;
+        }
       }
-    }
-  };
-
-  /**
-   * Checks if two objects are deeply equal by comparing their stringified versions.
-   *
-   * @param obj1 - The first object to compare.
-   * @param obj2 - The second object to compare.
-   * @returns - Boolean indicating whether the two objects are deeply equal.
-   */
-  private deepEqualObjects = (obj1: any, obj2: any): boolean => {
-    return JSON.stringify(obj1) === JSON.stringify(obj2);
-  };
-
-  /**
-   * Checks the validity of a provider URL by attempting to establish a connection
-   * with the provider within a specified timeout.
-   *
-   * @param providerURL - The URL of the provider to check.
-   * @returns - Promise resolving to a boolean indicating whether the provider is valid.
-   */
-  private checkProvider = async (providerURL: string): Promise<boolean> => {
-    let timerId: NodeJS.Timeout;
-    const timeout = new Promise((_, reject) => {
-      timerId = setTimeout(() => {
-        reject(new Error("Timeout"));
-      }, 10000);
-    });
-
-    const provider = new ethers.providers.JsonRpcProvider(providerURL);
-
-    try {
-      await Promise.race([provider.ready, timeout]);
-      clearTimeout(timerId);
-      return true;
-    } catch (error) {
-      clearTimeout(timerId);
-      return false;
-    }
-  };
-
-  /**
-   * Retry a Promise-based function a specified number of times, handling errors according to the
-   * specified error handling mode. If errorHandlingModeStrict is true, throws an error and exits
-   * the loop upon encountering an error. Otherwise, emits an error message and continues retrying
-   * until the retry limit is reached.
-   *
-   * @param fn - The Promise-based function to retry.
-   * @param retryCount - The number of times to retry the function (default: 3).
-   * @param errorHandlingModeStrict - The error handling mode (default: false).
-   * @returns - Promise resolving when the function has succeeded or the retry limit is reached.
-   */
-  private retry = async (
-    fn: () => Promise<void>,
-    retryCount: number = 3,
-    errorHandlingModeStrict: boolean,
-    condition: Condition,
-  ): Promise<void> => {
-    for (let i = 0; i < retryCount; i++) {
+    };
+    this.deepEqualObjects = (obj1, obj2) => {
+      return JSON.stringify(obj1) === JSON.stringify(obj2);
+    };
+    this.checkProvider = async (providerURL) => {
       try {
-        await fn();
-        break;
-      } catch (err: any) {
-        if (errorHandlingModeStrict) {
-          this.emit("conditionError", err, condition);
-          throw new Error(`Error in checking conditions: ${err.message}`);
-        } else {
-          if (i === retryCount - 1) {
-            this.emit("conditionNotMatched", err.message);
+        const provider = new ethers_1.ethers.providers.JsonRpcProvider(providerURL);
+        const network = await provider.send("eth_blockNumber", []);
+        return true;
+      } catch (error) {
+        console.log("Provider check failed:", error);
+        return false;
+      }
+    };
+    this.retry = async (fn, retryCount = 3, errorHandlingModeStrict, condition) => {
+      for (let i = 0; i < retryCount; i++) {
+        try {
+          await fn();
+          break;
+        }
+        catch (err) {
+          if (errorHandlingModeStrict) {
+            this.emit("conditionError", err, condition);
+            throw new Error(`Error in checking conditions: ${err.message}`);
+          }
+          else {
+            if (i === retryCount - 1) {
+              this.emit("conditionNotMatched", err.message);
+            }
           }
         }
       }
-    }
-  };
+    };
+  }
 }
+exports.ConditionMonitor = ConditionMonitor;
