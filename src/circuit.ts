@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable prefer-const */
 import * as LitJsSdk from "@lit-protocol/lit-node-client";
 import { serialize } from "@ethersproject/transactions";
 import { EventEmitter } from "events";
@@ -44,12 +47,12 @@ export class Circuit extends EventEmitter {
    * Boolean for locking start into one concurrent run.
    * @private
    */
-  private isRunning: boolean = false;
+  private isRunning = false;
   /**
    * Boolean for setting a secure key for the Lit Action.
    * @private
    */
-  private useSecureKey: boolean = false;
+  private useSecureKey = false;
   /**
    * The array of conditions.
    * @private
@@ -84,12 +87,12 @@ export class Circuit extends EventEmitter {
    * The count of executed actions.
    * @private
    */
-  private conditionExecutedCount: number = 0;
+  private conditionExecutedCount = 0;
   /**
    * The count of successfully completed actions.
    * @private
    */
-  private litActionCompletionCount: number = 0;
+  private litActionCompletionCount = 0;
   /**
    * The maximum number of executions allowed.
    * @private
@@ -151,7 +154,7 @@ export class Circuit extends EventEmitter {
    * The code for the Lit Action.
    * @private
    */
-  private code: string = "";
+  private code = "";
   /**
    * The secure key inputted by the developer.
    * @private
@@ -186,7 +189,7 @@ export class Circuit extends EventEmitter {
    * Flag indicating whether to continue running the circuit.
    * @private
    */
-  private continueRun: boolean = true;
+  private continueRun = true;
   /**
    * Flag indicating whether to continue running the circuit.
    * @private
@@ -201,12 +204,12 @@ export class Circuit extends EventEmitter {
    * The additional parameters for the Lit Action code.
    * @private
    */
-  private jsParameters: Object = {};
+  private jsParameters: object = {};
   /**
    * Flag indicating whether to strict error throwing is enabled.
    * @private
    */
-  private errorHandlingModeStrict: boolean = false;
+  private errorHandlingModeStrict = false;
   /**
    * Map of last successful nonces.
    * @private
@@ -226,13 +229,13 @@ export class Circuit extends EventEmitter {
     litNetwork?: LIT_NETWORKS_KEYS,
     pkpContractAddress = PKP_CONTRACT_ADDRESS,
     pkpHelperContractAddress = PKP_HELPER_CONTRACT_ADDRESS,
-    errorHandlingModeStrict: boolean = false,
+    errorHandlingModeStrict = false,
   ) {
     super();
     this.errorHandlingModeStrict = errorHandlingModeStrict;
     this.signer = signer ? signer : ethers.Wallet.createRandom();
     this.litClient = new LitJsSdk.LitNodeClient({
-      litNetwork: litNetwork ?? 'cayenne',
+      litNetwork: litNetwork ?? "datil-dev",
       debug: false,
     });
     this.monitor = new ConditionMonitor();
@@ -253,7 +256,7 @@ export class Circuit extends EventEmitter {
       ) => {
         this.log(
           LogCategory.CONDITION,
-          `Condition Matched with Emitted Value: `,
+          "Condition Matched with Emitted Value: ",
           JSON.stringify(emittedValue),
           new Date().toISOString(),
         );
@@ -275,7 +278,7 @@ export class Circuit extends EventEmitter {
       ) => {
         this.log(
           LogCategory.CONDITION,
-          `Condition Not Matched with Emitted Value: `,
+          "Condition Not Matched with Emitted Value: ",
           JSON.stringify(emittedValue),
           new Date().toISOString(),
         );
@@ -345,7 +348,7 @@ export class Circuit extends EventEmitter {
    */
   setActions = async (
     actions: Action[],
-    useSecureKey: boolean = false,
+    useSecureKey = false,
   ): Promise<{
     unsignedTransactionDataObject: { [key: string]: LitUnsignedTransaction };
     litActionCode: string;
@@ -472,23 +475,23 @@ export class Circuit extends EventEmitter {
         ] = generatedUnsignedData;
       }
       switch (action.type) {
-        case "custom":
-          if (!this.actionFunctions.has(`custom${action.priority}`)) {
-            let customCode = `const custom${action.priority} = ${action.code}\n`;
-            customCode = customCode.replace(
-              /Lit\.Actions\.setResponse\s*\(\s*{\s*response\s*:\s*(.*)\s*}\s*\)/g,
-              (_, responseValue) => {
-                return `concatenatedResponse.custom${action.priority} = ${responseValue}`;
-              },
-            );
-            this.actionFunctions.add(`custom${action.priority}`);
-            this.code += customCode;
-          }
-          break;
-        case "fetch":
-          if (!this.actionFunctions.has(`fetch${action.priority}`)) {
-            this.actionFunctions.add(`fetch${action.priority}`);
-            this.code += `const fetch${action.priority} = async () => {
+      case "custom":
+        if (!this.actionFunctions.has(`custom${action.priority}`)) {
+          let customCode = `const custom${action.priority} = ${action.code}\n`;
+          customCode = customCode.replace(
+            /Lit\.Actions\.setResponse\s*\(\s*{\s*response\s*:\s*(.*)\s*}\s*\)/g,
+            (_, responseValue) => {
+              return `concatenatedResponse.custom${action.priority} = ${responseValue}`;
+            },
+          );
+          this.actionFunctions.add(`custom${action.priority}`);
+          this.code += customCode;
+        }
+        break;
+      case "fetch":
+        if (!this.actionFunctions.has(`fetch${action.priority}`)) {
+          this.actionFunctions.add(`fetch${action.priority}`);
+          this.code += `const fetch${action.priority} = async () => {
                 try {
                     const headers = ${action.apiKey || "undefined"}
                       ? { Authorization: 'Bearer ${action.apiKey}' }
@@ -537,12 +540,12 @@ export class Circuit extends EventEmitter {
                     }: ', err);
                   }
                 }\n`;
-          }
-          break;
-        case "contract":
-          if (!this.actionFunctions.has(`contract${action.priority}`)) {
-            this.actionFunctions.add(`contract${action.priority}`);
-            this.code += `const contract${action.priority} = async () => {
+        }
+        break;
+      case "contract":
+        if (!this.actionFunctions.has(`contract${action.priority}`)) {
+          this.actionFunctions.add(`contract${action.priority}`);
+          this.code += `const contract${action.priority} = async () => {
                try {
                   await Lit.Actions.signEcdsa({
                       toSign: hashTransaction(generatedUnsignedDataContract${action.priority}),
@@ -554,9 +557,9 @@ export class Circuit extends EventEmitter {
                   console.log('Error thrown on contract at priority ${action.priority}: ', err)
                }
             }\n`;
-          }
+        }
 
-          break;
+        break;
       }
     }
 
@@ -803,11 +806,11 @@ export class Circuit extends EventEmitter {
         if (!publicKey || !publicKey.toLowerCase().startsWith("0x04")) {
           this.log(
             LogCategory.ERROR,
-            `Invalid PKP Public Key.`,
+            "Invalid PKP Public Key.",
             publicKey,
             new Date().toISOString(),
           );
-          throw new Error(`Invalid PKP Public Key.`);
+          throw new Error("Invalid PKP Public Key.");
         }
 
         this.publicKey = publicKey;
@@ -893,7 +896,7 @@ export class Circuit extends EventEmitter {
             if (executionResAfter === RunStatus.EXIT_RUN) {
               this.log(
                 LogCategory.CONDITION,
-                `Execution Condition Not Met to Continue Circuit.`,
+                "Execution Condition Not Met to Continue Circuit.",
                 `Run Status ${RunStatus.EXIT_RUN}`,
                 new Date().toISOString(),
               );
@@ -906,7 +909,7 @@ export class Circuit extends EventEmitter {
           ) {
             this.log(
               LogCategory.CONDITION,
-              `Execution Condition Not Met to Continue Circuit.`,
+              "Execution Condition Not Met to Continue Circuit.",
               `Run Status ${RunStatus.EXIT_RUN}`,
               new Date().toISOString(),
             );
@@ -933,7 +936,7 @@ export class Circuit extends EventEmitter {
           ) {
             this.log(
               LogCategory.CONDITION,
-              `Execution Condition Not Met to Continue Circuit.`,
+              "Execution Condition Not Met to Continue Circuit.",
               `Run Status ${RunStatus.EXIT_RUN}`,
               new Date().toISOString(),
             );
@@ -942,7 +945,7 @@ export class Circuit extends EventEmitter {
           }
         }
       } else if (this.actions.length < 1) {
-        throw new Error(`Actions have not been set. Run setActions() first.`);
+        throw new Error("Actions have not been set. Run setActions() first.");
       }
     } catch (err: any) {
       throw new Error(`Error running circuit: ${err.message}`);
@@ -1197,7 +1200,7 @@ export class Circuit extends EventEmitter {
     } catch (err: any) {
       this.log(
         LogCategory.ERROR,
-        `Lit Action failed.`,
+        "Lit Action failed.",
         err.message,
         new Date().toISOString(),
       );
@@ -1240,10 +1243,10 @@ export class Circuit extends EventEmitter {
       this.startDate && this.endDate
         ? new Date() >= this.startDate && new Date() <= this.endDate
         : this.startDate && !this.endDate
-        ? new Date() >= this.startDate
-        : this.endDate && !this.startDate
-        ? new Date() <= this.endDate
-        : true;
+          ? new Date() >= this.startDate
+          : this.endDate && !this.startDate
+            ? new Date() <= this.endDate
+            : true;
     const withinSuccessfulCompletions = this.maxLitActionCompletions
       ? this.litActionCompletionCount < this.maxLitActionCompletions
       : true;
@@ -1263,8 +1266,8 @@ export class Circuit extends EventEmitter {
   private broadcastContractActions = async (
     priorities: number[],
     combinedResponse: {
-      signatures: {};
-      response: {};
+      signatures: object;
+      response: object;
       logs: string;
     },
   ): Promise<void> => {
@@ -1311,7 +1314,7 @@ export class Circuit extends EventEmitter {
         } catch (err) {
           this.log(
             LogCategory.ERROR,
-            `Broadcast Failed.`,
+            "Broadcast Failed.",
             err.message,
             new Date().toISOString(),
           );
@@ -1340,32 +1343,32 @@ export class Circuit extends EventEmitter {
   private checkConditionalLogicAndRun = (): RunStatus => {
     if (this.conditionalLogic) {
       switch (this.conditionalLogic.type) {
-        case "THRESHOLD":
-          if (
-            this.conditionalLogic.value &&
+      case "THRESHOLD":
+        if (
+          this.conditionalLogic.value &&
             this.satisfiedConditions.size >= this.conditionalLogic.value
-          ) {
-            return RunStatus.ACTION_RUN;
-          } else {
-            return RunStatus.CONTINUE_RUN;
-          }
+        ) {
+          return RunStatus.ACTION_RUN;
+        } else {
+          return RunStatus.CONTINUE_RUN;
+        }
 
-        case "TARGET":
-          if (
-            this.conditionalLogic.targetCondition &&
+      case "TARGET":
+        if (
+          this.conditionalLogic.targetCondition &&
             this.satisfiedConditions.has(this.conditionalLogic.targetCondition)
-          ) {
-            return RunStatus.ACTION_RUN;
-          } else {
-            return RunStatus.CONTINUE_RUN;
-          }
+        ) {
+          return RunStatus.ACTION_RUN;
+        } else {
+          return RunStatus.CONTINUE_RUN;
+        }
 
-        case "EVERY":
-          if (this.satisfiedConditions.size === this.conditions.length) {
-            return RunStatus.ACTION_RUN;
-          } else {
-            return RunStatus.CONTINUE_RUN;
-          }
+      case "EVERY":
+        if (this.satisfiedConditions.size === this.conditions.length) {
+          return RunStatus.ACTION_RUN;
+        } else {
+          return RunStatus.CONTINUE_RUN;
+        }
       }
     } else {
       return RunStatus.CONTINUE_RUN;

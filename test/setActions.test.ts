@@ -37,14 +37,22 @@ describe("Set the Actions of the Circuit", () => {
     175177,
   );
 
+  const provider = new ethers.providers.JsonRpcProvider(
+    "https://yellowstone-rpc.litprotocol.com/",
+  );
+  const chronicleSigner = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+  const pkpContractAddress = "0x02C4242F72d62c8fEF2b2DB088A35a9F4ec741C7";
+  const pkpHelperContractAddress = "0x087995cc8BE0Bd6C19b1c7A01F9DB6D2CfFe0c5C";
+
   describe("SetCustomActions", () => {
     before(async () => {
       // Create a test instance of the circuit
       newCircuit = new Circuit(
-        new ethers.Wallet(process.env.PRIVATE_KEY, chronicleProvider),
-        undefined,
-        undefined,
-        true,
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
       );
       newCircuit.setConditions([
         new WebhookCondition(
@@ -80,12 +88,12 @@ describe("Set the Actions of the Circuit", () => {
         {
           type: "custom",
           priority: 0,
-          code: ' async () => { Lit.Actions.setResponse({ response: "Custom Action 1" }); }',
+          code: " async () => { Lit.Actions.setResponse({ response: \"Custom Action 1\" }); }",
         },
         {
           type: "custom",
           priority: 1,
-          code: 'async () => { Lit.Actions.setResponse({ response: "Custom Action 2" }); }',
+          code: "async () => { Lit.Actions.setResponse({ response: \"Custom Action 2\" }); }",
         },
       ];
 
@@ -95,10 +103,10 @@ describe("Set the Actions of the Circuit", () => {
 
       // Assert that the generated code contains the expected custom actions
       expect(LitActionCode).to.include(
-        'concatenatedResponse.custom0 = "Custom Action 1"',
+        "concatenatedResponse.custom0 = \"Custom Action 1\"",
       );
       expect(LitActionCode).to.include(
-        'concatenatedResponse.custom1 = "Custom Action 2"',
+        "concatenatedResponse.custom1 = \"Custom Action 2\"",
       );
       expect(LitActionCode.indexOf("custom1")).to.be.greaterThan(
         LitActionCode.indexOf("custom0"),
@@ -123,12 +131,12 @@ describe("Set the Actions of the Circuit", () => {
       const responseLog = newCircuit.getLogs(LogCategory.RESPONSE);
       expect(responseLog[0].category).to.equal(1);
       expect(responseLog[0].message.trim()).to.equal(
-        `Circuit executed successfully. Lit Action Response.`.trim(),
+        "Circuit executed successfully. Lit Action Response.".trim(),
       );
       const parsed = JSON.parse(responseLog[0].responseObject);
       expect(parsed.response).to.deep.equal({
-        0: '{"custom0":"Custom Action 1"}',
-        1: '{"custom1":"Custom Action 2"}',
+        0: "{\"custom0\":\"Custom Action 1\"}",
+        1: "{\"custom1\":\"Custom Action 2\"}",
       });
     });
   });
@@ -137,10 +145,11 @@ describe("Set the Actions of the Circuit", () => {
     before(async () => {
       // Create a test instance of the circuit
       newCircuit = new Circuit(
-        new ethers.Wallet(process.env.PRIVATE_KEY, chronicleProvider),
-        undefined,
-        undefined,
-        true,
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
       );
       newCircuit.setConditionalLogic({
         type: "EVERY",
@@ -195,37 +204,37 @@ describe("Set the Actions of the Circuit", () => {
       LitActionCode = res.litActionCode;
       // Assert that the generated code contains the expected fetch action
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `const fetch0 = async () => {`.replace(/\s/g, ""),
+        "const fetch0 = async () => {".replace(/\s/g, ""),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `const headers = undefined ? { Authorization: 'Bearer undefined' } : undefined;`.replace(
+        "const headers = undefined ? { Authorization: 'Bearer undefined' } : undefined;".replace(
           /\s/g,
           "",
         ),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `const response = await fetch('https://api.weather.gov/zones/forecast/MIZ018/forecast', { headers });`.replace(
+        "const response = await fetch('https://api.weather.gov/zones/forecast/MIZ018/forecast', { headers });".replace(
           /\s/g,
           "",
         ),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `const responseJSON = await response.json();`.replace(/\s/g, ""),
+        "const responseJSON = await response.json();".replace(/\s/g, ""),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `let value = responseJSON;`.replace(/\s/g, ""),
+        "let value = responseJSON;".replace(/\s/g, ""),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `for (const part of pathParts) {`.replace(/\s/g, ""),
+        "for (const part of pathParts) {".replace(/\s/g, ""),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `value = value[part];`.replace(/\s/g, ""),
+        "value = value[part];".replace(/\s/g, ""),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `if (value === undefined) {`.replace(/\s/g, ""),
+        "if (value === undefined) {".replace(/\s/g, ""),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `if (checkSignCondition(value, signConditionFetch0)) {`.replace(
+        "if (checkSignCondition(value, signConditionFetch0)) {".replace(
           /\s/g,
           "",
         ),
@@ -238,25 +247,25 @@ describe("Set the Actions of the Circuit", () => {
       });`.replace(/\s/g, ""),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `concatenatedResponse.fetch0 = { value, signed: true };`.replace(
+        "concatenatedResponse.fetch0 = { value, signed: true };".replace(
           /\s/g,
           "",
         ),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `} else {`.replace(/\s/g, ""),
+        "} else {".replace(/\s/g, ""),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `concatenatedResponse.fetch0 = { value, signed: false };`.replace(
+        "concatenatedResponse.fetch0 = { value, signed: false };".replace(
           /\s/g,
           "",
         ),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `} catch (err) {`.replace(/\s/g, ""),
+        "} catch (err) {".replace(/\s/g, ""),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `console.log('Error thrown on fetch at priority 0: ', err);`.replace(
+        "console.log('Error thrown on fetch at priority 0: ', err);".replace(
           /\s/g,
           "",
         ),
@@ -265,10 +274,11 @@ describe("Set the Actions of the Circuit", () => {
 
     it("Won't Sign on Incorrect Condition Met", async () => {
       const noSignCircuit = new Circuit(
-        new ethers.Wallet(process.env.PRIVATE_KEY, chronicleProvider),
-        undefined,
-        undefined,
-        true,
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
       );
       noSignCircuit.setConditionalLogic({
         type: "EVERY",
@@ -336,7 +346,7 @@ describe("Set the Actions of the Circuit", () => {
       const responseLog = noSignCircuit.getLogs(LogCategory.RESPONSE);
       expect(responseLog[0].category).to.equal(1);
       expect(responseLog[0].message.trim()).to.equal(
-        `Circuit executed successfully. Lit Action Response.`.trim(),
+        "Circuit executed successfully. Lit Action Response.".trim(),
       );
       const parsed = JSON.parse(responseLog[0].responseObject);
       expect(parsed.response).to.deep.equal({
@@ -364,7 +374,7 @@ describe("Set the Actions of the Circuit", () => {
       const responseLog = newCircuit.getLogs(LogCategory.RESPONSE);
       expect(responseLog[0].category).to.equal(1);
       expect(responseLog[0].message.trim()).to.equal(
-        `Circuit executed successfully. Lit Action Response.`.trim(),
+        "Circuit executed successfully. Lit Action Response.".trim(),
       );
       const parsed = JSON.parse(responseLog[0].responseObject);
       expect(parsed.response).to.deep.equal({
@@ -380,10 +390,11 @@ describe("Set the Actions of the Circuit", () => {
     before(async () => {
       // Create a test instance of the circuit
       newCircuit = new Circuit(
-        new ethers.Wallet(process.env.PRIVATE_KEY, chronicleProvider),
-        undefined,
-        undefined,
-        true,
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
       );
       newCircuit.setConditionalLogic({
         type: "EVERY",
@@ -446,7 +457,7 @@ describe("Set the Actions of the Circuit", () => {
       const responseLog = newCircuit.getLogs(LogCategory.RESPONSE);
       expect(responseLog[0].category).to.equal(1);
       expect(responseLog[0].message.trim()).to.equal(
-        `Circuit executed successfully. Lit Action Response.`.trim(),
+        "Circuit executed successfully. Lit Action Response.".trim(),
       );
       const parsed = JSON.parse(responseLog[0].responseObject);
       expect(parsed.response).to.deep.equal({
@@ -463,10 +474,11 @@ describe("Set the Actions of the Circuit", () => {
     before(async () => {
       // Create a test instance of the circuit
       newCircuit = new Circuit(
-        new ethers.Wallet(process.env.PRIVATE_KEY, chronicleProvider),
-        undefined,
-        undefined,
-        true,
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
       );
 
       newCircuit.setConditions([
@@ -541,22 +553,22 @@ describe("Set the Actions of the Circuit", () => {
       LitActionCode = res.litActionCode;
       // Assert that the generated code contains the expected contract action
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `const contract0 = async () => {`.replace(/\s/g, ""),
+        "const contract0 = async () => {".replace(/\s/g, ""),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `try {`.replace(/\s/g, ""),
+        "try {".replace(/\s/g, ""),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `await Lit.Actions.signEcdsa({`.replace(/\s/g, ""),
+        "await Lit.Actions.signEcdsa({".replace(/\s/g, ""),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `toSign: hashTransaction(generatedUnsignedDataContract0)`.replace(
+        "toSign: hashTransaction(generatedUnsignedDataContract0)".replace(
           /\s/g,
           "",
         ),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `concatenatedResponse.contract0 = generatedUnsignedDataContract0;`.replace(
+        "concatenatedResponse.contract0 = generatedUnsignedDataContract0;".replace(
           /\s/g,
           "",
         ),
@@ -582,7 +594,7 @@ describe("Set the Actions of the Circuit", () => {
       const responseLog = newCircuit.getLogs(LogCategory.RESPONSE);
       expect(responseLog[0].category).to.equal(1);
       expect(responseLog[0].message.trim()).to.equal(
-        `Circuit executed successfully. Lit Action Response.`.trim(),
+        "Circuit executed successfully. Lit Action Response.".trim(),
       );
       const parsed = JSON.parse(responseLog[0].responseObject);
       expect({
@@ -624,10 +636,11 @@ describe("Set the Actions of the Circuit", () => {
 
       // Create a test instance of the circuit
       newCircuit = new Circuit(
-        new ethers.Wallet(process.env.PRIVATE_KEY, chronicleProvider),
-        undefined,
-        undefined,
-        true,
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
       );
       newCircuit.setConditionalLogic({
         type: "EVERY",
@@ -694,12 +707,12 @@ describe("Set the Actions of the Circuit", () => {
         {
           type: "custom",
           priority: 0,
-          code: ' async () => { Lit.Actions.setResponse({ response: "Custom Action 1" }); }',
+          code: " async () => { Lit.Actions.setResponse({ response: \"Custom Action 1\" }); }",
         },
         {
           type: "custom",
           priority: 1,
-          code: 'async () => { Lit.Actions.setResponse({ response: "Custom Action 2" }); }',
+          code: "async () => { Lit.Actions.setResponse({ response: \"Custom Action 2\" }); }",
         },
         {
           type: "fetch",
@@ -733,19 +746,19 @@ describe("Set the Actions of the Circuit", () => {
       LitActionCode = res.litActionCode;
 
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `concatenatedResponse.fetch3 = { value, signed: true };`.replace(
+        "concatenatedResponse.fetch3 = { value, signed: true };".replace(
           /\s/g,
           "",
         ),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `concatenatedResponse.custom0 = "Custom Action 1"`.replace(/\s/g, ""),
+        "concatenatedResponse.custom0 = \"Custom Action 1\"".replace(/\s/g, ""),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `concatenatedResponse.custom1 = "Custom Action 2"`.replace(/\s/g, ""),
+        "concatenatedResponse.custom1 = \"Custom Action 2\"".replace(/\s/g, ""),
       );
       expect(LitActionCode.replace(/\s/g, "")).to.include(
-        `concatenatedResponse.contract2 = generatedUnsignedDataContract2;`.replace(
+        "concatenatedResponse.contract2 = generatedUnsignedDataContract2;".replace(
           /\s/g,
           "",
         ),
@@ -766,11 +779,12 @@ describe("Set the Actions of the Circuit", () => {
 
     it("Revert on Actions of the Same Priority Number", async () => {
       const noSignCircuit = new Circuit(
-        new ethers.Wallet(process.env.PRIVATE_KEY, chronicleProvider),
-        undefined,
-        undefined,
-        true,
-      );
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
+      );;
       noSignCircuit.setConditionalLogic({
         type: "EVERY",
         interval: 10000,
@@ -873,7 +887,7 @@ describe("Set the Actions of the Circuit", () => {
       const responseLogResponse = newCircuit.getLogs(LogCategory.RESPONSE);
       expect(responseLogResponse[0].category).to.equal(1);
       expect(responseLogResponse[0].message.trim()).to.equal(
-        `Circuit executed successfully. Lit Action Response.`.trim(),
+        "Circuit executed successfully. Lit Action Response.".trim(),
       );
       const parsedResponse = JSON.parse(responseLogResponse[0].responseObject);
       expect({
@@ -885,8 +899,8 @@ describe("Set the Actions of the Circuit", () => {
           maxPriorityFeePerGas: BigNumber.from("500000003"),
         },
       }).to.deep.equal({
-        0: '{"custom0":"Custom Action 1"}',
-        1: '{"custom1":"Custom Action 2"}',
+        0: "{\"custom0\":\"Custom Action 1\"}",
+        1: "{\"custom1\":\"Custom Action 2\"}",
         contract2: {
           ...generateUnsignedTransactionData,
           value: { type: "BigNumber", hex: "0x00" },
@@ -903,7 +917,7 @@ describe("Set the Actions of the Circuit", () => {
       const responseLogBroadcast = newCircuit.getLogs(LogCategory.BROADCAST);
       expect(responseLogBroadcast[0].category).to.equal(3);
       expect(responseLogBroadcast[0].message.trim()).to.equal(
-        `Contract Action broadcast to chain hardhat successfully. Lit Action Response.`.trim(),
+        "Contract Action broadcast to chain hardhat successfully. Lit Action Response.".trim(),
       );
       const parsed = JSON.parse(responseLogBroadcast[0].responseObject);
       expect({
@@ -959,10 +973,11 @@ describe("Set the Actions of the Circuit", () => {
 
       // Create a test instance of the circuit
       newCircuit = new Circuit(
-        new ethers.Wallet(process.env.PRIVATE_KEY, chronicleProvider),
-        undefined,
-        undefined,
-        true,
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
       );
       newCircuit.setConditionalLogic({
         type: "EVERY",
@@ -1082,7 +1097,7 @@ describe("Set the Actions of the Circuit", () => {
       const responseLogResponse = newCircuit.getLogs(LogCategory.RESPONSE);
       expect(responseLogResponse[0].category).to.equal(1);
       expect(responseLogResponse[0].message.trim()).to.equal(
-        `Circuit executed successfully. Lit Action Response.`.trim(),
+        "Circuit executed successfully. Lit Action Response.".trim(),
       );
 
       const responseLogBroadcast = newCircuit.getLogs(LogCategory.BROADCAST);
@@ -1113,10 +1128,11 @@ describe("Set the Actions of the Circuit", () => {
     before(async () => {
       // Create a test instance of the circuit
       newCircuit = new Circuit(
-        new ethers.Wallet(process.env.PRIVATE_KEY, chronicleProvider),
-        undefined,
-        undefined,
-        true,
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
       );
       newCircuit.setConditionalLogic({
         type: "EVERY",
@@ -1218,10 +1234,11 @@ describe("Set the Actions of the Circuit", () => {
       );
 
       newCircuit = new Circuit(
-        new ethers.Wallet(process.env.PRIVATE_KEY, chronicleProvider),
-        undefined,
-        undefined,
-        true,
+        chronicleSigner,
+        "datil-dev",
+        pkpContractAddress,
+        pkpHelperContractAddress,
+        true
       );
       newCircuit.setConditionalLogic({
         type: "EVERY",

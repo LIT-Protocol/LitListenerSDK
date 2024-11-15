@@ -35,7 +35,7 @@ export class ConditionMonitor extends EventEmitter {
       );
     } else if (condition instanceof ContractCondition) {
       await this.retry(
-        () => this.startMonitoringContract(condition),
+        () => this.startMonitoringContract(condition.contractAddress),
         3,
         errorHandlingModeStrict,
         condition,
@@ -96,23 +96,23 @@ export class ConditionMonitor extends EventEmitter {
    * @param condition - The contract condition to monitor.
    * @throws {Error} If an error occurs while processing contract event.
    */
-  private startMonitoringContract = async (condition: ContractCondition) => {
+  private startMonitoringContract = async (condition: any) => {
     try {
       const { contractAddress, abi, eventName, providerURL } = condition;
 
-      const checkProviderValid = await this.checkProvider(providerURL);
+      const checkProviderValid = await this.checkProvider(condition);
+
 
       if (!providerURL || !checkProviderValid) {
         this.emit("conditionError", "Error: Invalid Provider URL.", condition);
-        throw new Error(`Error: Invalid Provider URL.`);
+        throw new Error("Error: Invalid Provider URL.");
       }
 
       const contract = new ethers.Contract(
         contractAddress,
         abi,
         new ethers.providers.JsonRpcProvider(
-          providerURL,
-          LitChainIds[condition.chainId],
+          providerURL
         ),
       );
 
@@ -125,7 +125,7 @@ export class ConditionMonitor extends EventEmitter {
             "Error in Retrieving contract args.",
             condition,
           );
-          throw new Error(`Error in Retrieving contract args.`);
+          throw new Error("Error in Retrieving contract args.");
         }
 
         try {
@@ -147,6 +147,7 @@ export class ConditionMonitor extends EventEmitter {
 
       const subscribeToEvent = () => {
         contract.on(eventName, processEvent);
+        console.log("Subscribed!");
       };
 
       return subscribeToEvent();
@@ -214,13 +215,14 @@ export class ConditionMonitor extends EventEmitter {
     }
 
     try {
+      // console.log("condition", condition);  
       if (match) {
         await condition.onMatched(emittedValue);
-        await condition.sdkOnMatched();
+        // await condition.sdkOnMatched();
         this.emit("conditionMatched", emittedValue);
       } else {
         await condition.onUnMatched(emittedValue);
-        await condition.sdkOnUnMatched();
+        // await condition.sdkOnUnMatched();
         this.emit("conditionNotMatched", emittedValue);
       }
     } catch (error: any) {
@@ -250,55 +252,55 @@ export class ConditionMonitor extends EventEmitter {
       ethers.BigNumber.isBigNumber(emittedValue)
     ) {
       switch (operator) {
-        case "<":
-          return emittedValue.lt(expectedValue);
-        case ">":
-          return emittedValue.gt(expectedValue);
-        case "==":
-        case "===":
-          return emittedValue.eq(expectedValue);
-        case "!==":
-        case "!=":
-          return !emittedValue.eq(expectedValue);
-        case ">=":
-          return emittedValue.gte(expectedValue);
-        case "<=":
-          return emittedValue.lte(expectedValue);
+      case "<":
+        return emittedValue.lt(expectedValue);
+      case ">":
+        return emittedValue.gt(expectedValue);
+      case "==":
+      case "===":
+        return emittedValue.eq(expectedValue);
+      case "!==":
+      case "!=":
+        return !emittedValue.eq(expectedValue);
+      case ">=":
+        return emittedValue.gte(expectedValue);
+      case "<=":
+        return emittedValue.lte(expectedValue);
       }
     } else if (
       typeof expectedValue === "object" &&
       typeof emittedValue === "object"
     ) {
       switch (operator) {
-        case "==":
-        case "===":
-          return this.deepEqualObjects(emittedValue, expectedValue);
-        case "!=":
-        case "!==":
-          return !this.deepEqualObjects(emittedValue, expectedValue);
-        default:
-          throw new Error(
+      case "==":
+      case "===":
+        return this.deepEqualObjects(emittedValue, expectedValue);
+      case "!=":
+      case "!==":
+        return !this.deepEqualObjects(emittedValue, expectedValue);
+      default:
+        throw new Error(
             `Operator '${operator}' not supported for object comparison.`,
-          );
+        );
       }
     } else {
       switch (operator) {
-        case "<":
-          return emittedValue < expectedValue;
-        case ">":
-          return emittedValue > expectedValue;
-        case "==":
-          return emittedValue == expectedValue;
-        case "===":
-          return emittedValue === expectedValue;
-        case "!==":
-          return emittedValue !== expectedValue;
-        case "!=":
-          return emittedValue != expectedValue;
-        case ">=":
-          return emittedValue >= expectedValue;
-        case "<=":
-          return emittedValue <= expectedValue;
+      case "<":
+        return emittedValue < expectedValue;
+      case ">":
+        return emittedValue > expectedValue;
+      case "==":
+        return emittedValue == expectedValue;
+      case "===":
+        return emittedValue === expectedValue;
+      case "!==":
+        return emittedValue !== expectedValue;
+      case "!=":
+        return emittedValue != expectedValue;
+      case ">=":
+        return emittedValue >= expectedValue;
+      case "<=":
+        return emittedValue <= expectedValue;
       }
     }
   };
@@ -321,22 +323,13 @@ export class ConditionMonitor extends EventEmitter {
    * @param providerURL - The URL of the provider to check.
    * @returns - Promise resolving to a boolean indicating whether the provider is valid.
    */
-  private checkProvider = async (providerURL: string): Promise<boolean> => {
-    let timerId: NodeJS.Timeout;
-    const timeout = new Promise((_, reject) => {
-      timerId = setTimeout(() => {
-        reject(new Error("Timeout"));
-      }, 10000);
-    });
-
-    const provider = new ethers.providers.JsonRpcProvider(providerURL);
-
+  private checkProvider = async (condition: any): Promise<boolean> => {
     try {
-      await Promise.race([provider.ready, timeout]);
-      clearTimeout(timerId);
+      const provider = new ethers.providers.JsonRpcProvider(condition.providerURL);
+      const network = await provider.send("eth_blockNumber", []);
       return true;
     } catch (error) {
-      clearTimeout(timerId);
+      console.log("Provider check failed:", error);
       return false;
     }
   };
@@ -354,7 +347,7 @@ export class ConditionMonitor extends EventEmitter {
    */
   private retry = async (
     fn: () => Promise<void>,
-    retryCount: number = 3,
+    retryCount = 3,
     errorHandlingModeStrict: boolean,
     condition: Condition,
   ): Promise<void> => {

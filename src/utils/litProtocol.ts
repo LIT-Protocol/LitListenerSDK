@@ -5,7 +5,7 @@ import {
   AuthSig,
   AuthCallbackParams,
 } from "@lit-protocol/types";
-import { DENO_BUNDLED } from "./../../src/constants";
+import { DENO_BUNDLED } from "../constants";
 import { LitNodeClient } from "@lit-protocol/lit-node-client";
 import {
   LitAbility,
@@ -15,75 +15,69 @@ import {
   createSiweMessageWithRecaps,
 } from "@lit-protocol/auth-helpers";
 
-let crypto: any, CryptoJS: any;
+let cryptoLib: any, cryptoJSInstance: any;
 
 const loadNodebuild = async () => {
   if (typeof window === "undefined") {
     const stream = await import("stream");
-    crypto = await import("crypto");
-    CryptoJS = await import("crypto-js");
+    cryptoLib = await import("crypto");
+    cryptoJSInstance = await import("crypto-js");
   }
 };
 
 loadNodebuild();
 
 export const generateSessionSig = async (
-  client: LitNodeClient,
+  client: any,
   signer: ethers.Signer,
   pkpPublicKey: string,
-  resources: LitResourceAbilityRequest[] = [],
+  resources: any[] = [],
   chainId = 1,
   uri = "https://localhost/login",
-  version = "1",
-): Promise<SessionSigsMap> => {
+  version = "1"
+): Promise<any> => {
   try {
-    resources =
-      resources.length > 0
-        ? resources
-        : [
-            {
-              resource: new LitPKPResource("*"),
-              ability: LitAbility.PKPSigning,
-            },
-            {
-              resource: new LitActionResource("*"),
-              ability: LitAbility.LitActionExecution,
-            },
-          ];
+    resources = resources.length > 0
+      ? resources
+      : [
+        {
+          resource: new LitPKPResource("*"),
+          ability: LitAbility.PKPSigning,
+        },
+        {
+          resource: new LitActionResource("*"),
+          ability: LitAbility.LitActionExecution,
+        },
+      ];
 
     const sessionSigs = await client.getSessionSigs({
       chain: "ethereum",
-      pkpPublicKey: pkpPublicKey,
       resourceAbilityRequests: resources,
-      authNeededCallback: async (params: AuthCallbackParams) => {
+      authNeededCallback: async (params: any) => {
         console.log("resourceAbilityRequests:", params.resources);
 
         if (!params.expiration) {
           throw new Error("expiration is required");
         }
-
         if (!params.resources) {
           throw new Error("resourceAbilityRequests is required");
         }
-
         if (!params.uri) {
           throw new Error("uri is required");
         }
+
         const blockHash = await client.getLatestBlockhash();
         const authSig = await generateAuthSig(
           client,
           signer,
           blockHash,
-
           params.resourceAbilityRequests,
           1,
-          params.uri,
+          params.uri
         );
-
         return authSig;
       },
     });
-
     return sessionSigs;
   } catch (err) {
     throw new Error(`Error generating signed message ${err}`);
@@ -91,14 +85,14 @@ export const generateSessionSig = async (
 };
 
 const generateAuthSig = async (
-  client: LitNodeClient,
+  client: any,
   signer: ethers.Signer,
   blockHash: string,
-  resources: LitResourceAbilityRequest[],
+  resources: any[],
   chainId = 1,
   uri = "https://localhost/login",
-  version = "1",
-): Promise<AuthSig> => {
+  version = "1"
+): Promise<any> => {
   let address = await signer.getAddress();
   address = ethers.utils.getAddress(address);
 
@@ -126,18 +120,19 @@ export const getBytesFromMultihash = (multihash: string): string => {
 };
 
 export const generateSecureRandomKey = (): string => {
-  if (!crypto) {
+  if (!cryptoLib) {
     throw new Error("This function can only be run in a Node.js environment.");
   }
-  return crypto.randomBytes(32).toString("hex");
+  return cryptoLib.randomBytes(32).toString("hex");
 };
 
-export const hashHex = (input: string): string => {
-  if (!CryptoJS) {
+export const hashHex = async (input: string): Promise<string> => {
+  await loadNodebuild();
+  if (!cryptoJSInstance) {
     throw new Error("This function can only be run in a Node.js environment.");
   }
-  const hash = CryptoJS.SHA256(input);
-  return "0x" + hash.toString(CryptoJS.enc.Hex);
+  const hash = cryptoJSInstance.SHA256(input);
+  return "0x" + hash.toString(cryptoJSInstance.enc.Hex);
 };
 
 export const bundleCodeManual = (dynamicCode: string): string => {
