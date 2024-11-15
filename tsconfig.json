@@ -17,7 +17,7 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
   },
-  "include": ["src/**/*", "test", "js-test.mjs"],
+  "include": ["src/**/*", "test", "js-test.mjs", "lmao/litProtocol-n.ts", "lmao/conditions-n.ts"],
   "exclude": ["node_modules", "lib", "**/*spec.ts"],
   "files": ["./hardhat.config.ts", "src/index.ts"]
 }

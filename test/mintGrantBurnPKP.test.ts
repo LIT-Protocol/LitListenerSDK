@@ -8,7 +8,7 @@ import pkpPermissionsABI from "./../src/abis/PKPPermissions.json";
 import { PKPNFT } from "./../typechain-types/contracts/PKPNFT";
 import { PKPPermissions } from "./../typechain-types/contracts/PKPPermissions";
 import { Circuit } from "../src/circuit";
-import { getBytesFromMultihash } from "./../src/utils/litProtocol";
+import { getBytesFromMultihash } from "../src/utils/litProtocol";
 import {
   LogCategory,
   WebhookCondition,
@@ -138,10 +138,10 @@ describe("MintGrantBurnPKP", () => {
     expect(responseLog.length).to.equal(1);
     expect(responseLog[0].category).to.equal(1);
     expect(responseLog[0].message.trim()).to.equal(
-      `Circuit executed successfully. Lit Action Response.`.trim(),
+      "Circuit executed successfully. Lit Action Response.".trim(),
     );
     expect(responseLog[0].responseObject).to.include(
-      '{"signatures":{},"response":{"0":"{\\"custom0\\":\\"Transaction Signed Successfully.\\"}"},"logs":"\\nValid secure key, code running.\\n"}',
+      "{\"signatures\":{},\"response\":{\"0\":\"{\\\"custom0\\\":\\\"Transaction Signed Successfully.\\\"}\"},\"logs\":\"\\nValid secure key, code running.\\n\"}",
     );
   });
 });
