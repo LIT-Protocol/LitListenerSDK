@@ -235,7 +235,7 @@ export class Circuit extends EventEmitter {
     this.errorHandlingModeStrict = errorHandlingModeStrict;
     this.signer = signer ? signer : ethers.Wallet.createRandom();
     this.litClient = new LitJsSdk.LitNodeClient({
-      litNetwork: litNetwork ?? "cayenne",
+      litNetwork: litNetwork ?? "datil-dev",
       debug: false,
     });
     this.monitor = new ConditionMonitor();
